@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.UserModel;
+import com.example.demo.entity.User;
 import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,14 +19,14 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/user")
-    public ResponseEntity<UserModel> createNewUser(@RequestBody UserModel userModel) {
-        UserModel userModel1 = userService.saveUser(userModel);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userModel1);
+    public ResponseEntity<User> createNewUser(@RequestBody User user) {
+        User user1 = userService.saveUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user1);
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserModel>> getAllUsers() {
-        List<UserModel> userModelList = userService.findAllUsers();
-        return ResponseEntity.status(HttpStatus.OK).body(userModelList);
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> userList = userService.findAllUsers();
+        return ResponseEntity.status(HttpStatus.OK).body(userList);
     }
 }
