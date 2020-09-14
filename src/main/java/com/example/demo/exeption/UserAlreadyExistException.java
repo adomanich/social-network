@@ -1,4 +1,4 @@
-package com.example.demo.security.exeption;
+package com.example.demo.exeption;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

@@ -2,15 +2,17 @@ package com.example.demo.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
 
 @Getter
 @Setter
-@Document(collection = "Comment")
-public class Comment {
+@Document(collection = "Dislike")
+public class Dislike {
 
-    private String creationDate;
-    private String commentText;
-    private Long userId;
+    @Id
     private Long publicationId;
+    private List<Long> dislikedBy;
 }

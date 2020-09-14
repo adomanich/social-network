@@ -6,6 +6,8 @@ import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+
 @Getter
 @Setter
 @ToString
@@ -18,4 +20,6 @@ public class User {
     private String password;
     private String firstName;
     private String lastName;
+    private List<Long> following;
+    private List<Long> followers;
 }

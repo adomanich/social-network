@@ -14,7 +14,5 @@ import java.util.List;
 public class UserDto {
 
     private User user;
-    private List<User> subscribers;
-    private List<User> followers;
     private List<Publication> publications;
 }

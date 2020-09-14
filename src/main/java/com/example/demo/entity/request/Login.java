@@ -1,4 +1,4 @@
-package com.example.demo.entity;
+package com.example.demo.entity.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

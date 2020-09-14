@@ -1,12 +1,12 @@
 package com.example.demo.security.service;
 
 import com.example.demo.dto.UserDto;
-import com.example.demo.entity.Login;
 import com.example.demo.entity.User;
+import com.example.demo.entity.request.Login;
+import com.example.demo.exeption.UserNotFoundException;
 import com.example.demo.mapping.UserMappingDto;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.dto.SingUpDto;
-import com.example.demo.security.exeption.UserNotFoundException;
 import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,6 +37,8 @@ public class SecurityService implements UserDetailsService {
         user.setLastName(singUpDto.getLastName());
         user.setPassword(singUpDto.getPassword());
         user.setId(System.currentTimeMillis());
+        user.setFollowers(new ArrayList<>());
+        user.setFollowing(new ArrayList<>());
         user = userService.saveUser(user);
 
         return UserMappingDto.getInitialUserDto(user);

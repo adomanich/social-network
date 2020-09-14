@@ -1,12 +1,13 @@
 package com.example.demo.security.controller;
 
 import com.example.demo.dto.UserDto;
-import com.example.demo.entity.Login;
 import com.example.demo.entity.User;
+import com.example.demo.entity.request.Login;
+import com.example.demo.exeption.IncorrectPasswordException;
+import com.example.demo.exeption.UserAlreadyExistException;
+import com.example.demo.exeption.UserNotFoundException;
 import com.example.demo.security.dto.SingUpDto;
 import com.example.demo.security.dto.SuccessSingInDto;
-import com.example.demo.security.exeption.IncorrectPasswordException;
-import com.example.demo.security.exeption.UserAlreadyExistException;
 import com.example.demo.security.service.JwtTool;
 import com.example.demo.security.service.SecurityService;
 import com.example.demo.service.UserService;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +29,7 @@ public class SecurityController {
     @Autowired
     private JwtTool jwtTool;
 
-    @PostMapping("/signUp")
+    @PostMapping("/api/signUp")
     public ResponseEntity<UserDto> signUp(@RequestBody SingUpDto singUpDto) {
         UserDto userDto = new UserDto();
         try {
@@ -37,13 +37,13 @@ public class SecurityController {
             if (user != null) {
                 throw new UserAlreadyExistException("User with " + user.getUsername() + " email already exist");
             }
-        } catch (UsernameNotFoundException ex) {
+        } catch (UserNotFoundException ex) {
             userDto = securityService.singUp(singUpDto);
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
     }
 
-    @PostMapping("/signIn")
+    @PostMapping("/api/signIn")
     public ResponseEntity<?> signIp(@RequestBody Login loginModel) {
         securityService.loadUserByUsername(loginModel.getEmail());
         if (!securityService.isPasswordValid(loginModel)) {
