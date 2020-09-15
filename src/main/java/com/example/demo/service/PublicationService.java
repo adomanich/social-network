@@ -1,14 +1,13 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Dislike;
-import com.example.demo.entity.Like;
-import com.example.demo.entity.Publication;
-import com.example.demo.entity.User;
+import com.example.demo.entity.*;
+import com.example.demo.entity.request.CommentRequest;
 import com.example.demo.entity.request.PublicationRequest;
+import com.example.demo.exeption.CommentEditException;
 import com.example.demo.exeption.PublicationAlreadyExistException;
+import com.example.demo.exeption.UnSuccessDeleteException;
+import com.example.demo.exeption.notfound.CommentNotFoundException;
 import com.example.demo.mapping.PublicationMapping;
-import com.example.demo.repository.DislikeRepository;
-import com.example.demo.repository.LikeRepository;
 import com.example.demo.repository.PublicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,17 +19,17 @@ public class PublicationService {
 
     @Autowired
     private PublicationRepository publicationRepository;
-    @Autowired
-    private LikeRepository likeRepository;
-    @Autowired
-    private DislikeRepository dislikeRepository;
 
     public List<Publication> getUsersPublications(Long userId) {
         return publicationRepository.getUsersPublicationList(userId);
     }
 
-    public Publication getPublication(Long userId, Long publicationId) {
-        return publicationRepository.getPublicationById(userId, publicationId);
+    public Publication getPublication(Long publicationId) {
+        return publicationRepository.getPublicationById(publicationId);
+    }
+
+    public Publication getPublication(Long publicationId, Long userId) {
+        return publicationRepository.getPublicationById(publicationId, userId);
     }
 
     public Publication createPublication(User user, PublicationRequest publicationRequest) {
@@ -44,35 +43,137 @@ public class PublicationService {
         return publicationRepository.save(PublicationMapping.getPublication(user, publicationRequest));
     }
 
-    public Publication likeAPublication(User user, Publication publication) {
+    public void deletePublication(User user, Publication publication) {
+        publicationRepository.delete(publication);
+        List<Publication> userPublication = publicationRepository.getUsersPublicationList(user.getId());
+        if (userPublication.stream().anyMatch(p -> p.getId().equals(publication.getId()))) {
+            throw new UnSuccessDeleteException("Publication - " + publication.getId() + " was not deleted");
+        }
+    }
+
+    public Publication editPublication(Publication publication, PublicationRequest publicationRequest) {
+        publication.setName(publicationRequest.getName());
+        publication.setDescription(publicationRequest.getDescription());
+        return publicationRepository.save(publication);
+    }
+
+    public Publication likePublication(User user, Publication publication) {
         Publication updatedPublication = null;
-        List<Long> likes = likeRepository.getLikedBy(publication.getId()).getLikedBy();
-        if (!likes.contains(user.getId())) {
-            Like like = new Like();
-            likes.add(user.getId());
-            like.setLikedBy(likes);
-            publication.setLike(like);
+        List<Long> userIdWhoLikeAPublication = publication.getLike().getLikedBy();
+        if (!userIdWhoLikeAPublication.contains(user.getId())) {
+            userIdWhoLikeAPublication.add(user.getId());
+            List<Long> userIdWhoDislikesPublication = publication.getDislike().getDislikedBy();
+            if (userIdWhoDislikesPublication.contains(user.getId())) {
+                userIdWhoDislikesPublication.remove(user.getId());
+            }
             updatedPublication = publicationRepository.save(publication);
         }
         return updatedPublication;
     }
 
-    public Publication dislikeAPublication(User user, Publication publication) {
+    public Publication dislikePublication(User user, Publication publication) {
         Publication updatedPublication = null;
-        List<Long> dislikes = dislikeRepository.getDislikedBy(publication.getId()).getDislikedBy();
-        if (!dislikes.contains(user.getId())) {
-            Dislike dislike = new Dislike();
-            dislikes.add(user.getId());
-            dislike.setDislikedBy(dislikes);
-            publication.setDislike(dislike);
+        List<Long> userIdWhoDislikeAPublication = publication.getDislike().getDislikedBy();
+        if (!userIdWhoDislikeAPublication.contains(user.getId())) {
+            userIdWhoDislikeAPublication.add(user.getId());
+
+            List<Long> userIdWhoLikeAPublication = publication.getLike().getLikedBy();
+            if (userIdWhoLikeAPublication.contains(user.getId())) {
+                userIdWhoLikeAPublication.remove(user.getId());
+            }
             updatedPublication = publicationRepository.save(publication);
         }
         return updatedPublication;
     }
 
-    public List<Long> getUserIdDislikedAPublication(Long publicationId) {
-        return dislikeRepository.getDislikedBy(publicationId).getDislikedBy();
+    public Publication leaveComment(User user, Publication publication, CommentRequest commentRequest) {
+        List<Comment> publicationComments = publication.getComments();
+        Comment comment = new Comment();
+        comment.setCommentText(commentRequest.getText());
+        comment.setUserId(user.getId());
+        comment.setLikes(new Like());
+        comment.setDislikes(new Dislike());
+        publicationComments.add(comment);
+        return publicationRepository.save(publication);
     }
 
+    public Publication deleteComment(Publication publication, Long commentId) {
+        List<Comment> publicationComments = publication.getComments();
 
+        Comment comment = publicationComments.stream()
+                .filter(c -> c.getCommentId().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new CommentNotFoundException("Comment with " + commentId + " id does not exist"));
+
+        publicationComments.remove(comment);
+        return publicationRepository.save(publication);
+    }
+
+    public Publication editComment(User user, Publication publication, Long commentId, CommentRequest commentRequest) {
+
+        List<Comment> publicationComments = publication.getComments();
+        Comment comment = publicationComments.stream()
+                .filter(c -> c.getCommentId().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new CommentNotFoundException("Comment with " + commentId + " id not found"));
+
+        if (comment.getUserId() == user.getId()) {
+            comment.setCommentText(commentRequest.getText());
+            return publicationRepository.save(publication);
+        } else {
+            throw new CommentEditException("User can edit only his comment");
+        }
+    }
+
+    public Publication likeComment(User user, Publication publication, Long commentId) {
+        Publication updatedPublication = null;
+        List<Long> userIdWhoLikeComment = getUserWhoLikeComment(publication, commentId);
+
+        if (!userIdWhoLikeComment.contains(user.getId())) {
+            userIdWhoLikeComment.add(user.getId());
+
+            List<Long> userIdWhoDislikeAPublication = getUserWhoDislikeComment(publication, commentId);
+            if (userIdWhoDislikeAPublication.contains(user.getId())) {
+                userIdWhoDislikeAPublication.remove(user.getId());
+            }
+            updatedPublication = publicationRepository.save(publication);
+        }
+        return updatedPublication;
+    }
+
+    public Publication dislikeComment(User user, Publication publication, Long commentId) {
+        Publication updatedPublication = null;
+        List<Long> userIdWhoDislikeComment = getUserWhoDislikeComment(publication, commentId);
+
+        if (!userIdWhoDislikeComment.contains(user.getId())) {
+            userIdWhoDislikeComment.add(user.getId());
+
+            List<Long> userIdWhoLikeAPublication = getUserWhoLikeComment(publication, commentId);
+            if (userIdWhoLikeAPublication.contains(user.getId())) {
+                userIdWhoLikeAPublication.remove(user.getId());
+            }
+            updatedPublication = publicationRepository.save(publication);
+        }
+        return updatedPublication;
+    }
+
+    private List<Long> getUserWhoDislikeComment(Publication publication, Long commentId) {
+        return publication.getComments()
+                .stream()
+                .filter(comment -> comment.getCommentId().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new CommentNotFoundException("Comment with " + commentId + " id not found"))
+                .getDislikes()
+                .getDislikedBy();
+    }
+
+    private List<Long> getUserWhoLikeComment(Publication publication, Long commentId) {
+        return publication.getComments()
+                .stream()
+                .filter(comment -> comment.getCommentId().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new CommentNotFoundException("Comment with " + commentId + " id not found"))
+                .getLikes()
+                .getLikedBy();
+    }
 }

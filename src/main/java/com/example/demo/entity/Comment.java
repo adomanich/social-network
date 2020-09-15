@@ -1,16 +1,21 @@
 package com.example.demo.entity;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Setter
-@Document(collection = "Comment")
+@EqualsAndHashCode
 public class Comment {
 
-    private String creationDate;
-    private String commentText;
+    private Long commentId;
     private Long userId;
-    private Long publicationId;
+    private String commentText;
+    private Like likes;
+    private Dislike dislikes;
+
+    public Comment() {
+        commentId = System.currentTimeMillis();
+    }
 }

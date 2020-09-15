@@ -13,6 +13,9 @@ public interface PublicationRepository extends MongoRepository<Publication, Inte
     @Query(value = "{userId: ?0}")
     List<Publication> getUsersPublicationList(Long userId);
 
-    @Query(value = "{userId: ?0, publicationId: ?1}")
-    Publication getPublicationById(Long userId, Long publicationId);
+    @Query(value = "{id: ?0}")
+    Publication getPublicationById(Long publicationId);
+
+    @Query(value = "{id: ?0, userId: ?1}")
+    Publication getPublicationById(Long publicationId, Long userId);
 }

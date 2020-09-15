@@ -22,4 +22,8 @@ public class User {
     private String lastName;
     private List<Long> following;
     private List<Long> followers;
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
 }

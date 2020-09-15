@@ -3,7 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.UserDto;
 import com.example.demo.entity.Publication;
 import com.example.demo.entity.User;
-import com.example.demo.exeption.UserNotFoundException;
+import com.example.demo.exeption.notfound.UserNotFoundException;
 import com.example.demo.mapping.UserMappingDto;
 import com.example.demo.service.PublicationService;
 import com.example.demo.service.UserService;
@@ -13,8 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.websocket.server.PathParam;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @Validated
@@ -26,12 +26,12 @@ public class UserController {
     private PublicationService publicationService;
 
     @GetMapping("api/users")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> userList = userService.findAllUsers()
-                .stream()
-                .map(user -> UserMappingDto.getUserDto(user, publicationService.getUsersPublications(user.getId())))
-                .collect(Collectors.toList());
-        return ResponseEntity.status(HttpStatus.OK).body(userList);
+    public ResponseEntity<List<User>> getAllUsers(@PathParam("fullName") String fullName) {
+        if (fullName == null) {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.findAllUsers());
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.filterUserByFullName(fullName));
+        }
     }
 
     @PutMapping("/api/user/{userId}")
@@ -90,5 +90,23 @@ public class UserController {
         List<Publication> usersPublications = publicationService.getUsersPublications(updatedUser.getId());
 
         return ResponseEntity.status(HttpStatus.OK).body(UserMappingDto.getUserDto(updatedUser, usersPublications));
+    }
+
+    @GetMapping("api/user/{userId}")
+    public ResponseEntity<UserDto> getUser(@PathVariable("userId") Long userId) {
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            throw new UserNotFoundException("User with " + userId + " id not found");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(UserMappingDto.getUserDto(user, publicationService.getUsersPublications(userId)));
+    }
+
+    @DeleteMapping("api/user/{userId}")
+    public ResponseEntity<List<User>> deleteUser(@PathVariable("userId") Long userId) {
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            throw new UserNotFoundException("User with " + userId + " id not found");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(userService.deleteUser(user));
     }
 }

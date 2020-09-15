@@ -1,12 +1,15 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.User;
-import com.example.demo.exeption.FollowerNotFoundException;
+import com.example.demo.exeption.UnSuccessDeleteException;
+import com.example.demo.exeption.notfound.FollowerNotFoundException;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -72,7 +75,26 @@ public class UserService {
         return userRepository.getUserById(id);
     }
 
+    public List<User> filterUserByFullName(String fullName) {
+        List<User> allUsers = findAllUsers();
+        List<User> userAfterFiltering = new ArrayList<>();
+        if (!allUsers.isEmpty()) {
+            userAfterFiltering = allUsers.stream()
+                    .filter(user -> user.getFullName().toLowerCase().contains(fullName.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+        return userAfterFiltering;
+    }
+
     public List<User> findAllUsers() {
         return userRepository.findAll();
+    }
+
+    public List<User> deleteUser(User user) {
+        userRepository.delete(user);
+        if (userRepository.getUserById(user.getId()) != null) {
+            throw new UnSuccessDeleteException("User with - " + user.getId() + " id was not deleted");
+        }
+        return findAllUsers();
     }
 }

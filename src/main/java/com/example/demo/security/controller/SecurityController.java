@@ -5,7 +5,7 @@ import com.example.demo.entity.User;
 import com.example.demo.entity.request.Login;
 import com.example.demo.exeption.IncorrectPasswordException;
 import com.example.demo.exeption.UserAlreadyExistException;
-import com.example.demo.exeption.UserNotFoundException;
+import com.example.demo.exeption.notfound.UserNotFoundException;
 import com.example.demo.security.dto.SingUpDto;
 import com.example.demo.security.dto.SuccessSingInDto;
 import com.example.demo.security.service.JwtTool;

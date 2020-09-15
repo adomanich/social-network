@@ -1,6 +1,7 @@
 package com.example.demo.handler;
 
 import com.example.demo.exeption.*;
+import com.example.demo.exeption.notfound.*;
 import com.example.demo.security.dto.ErrorDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ import java.util.List;
 public class ExceptionHandler {
 
     @org.springframework.web.bind.annotation.ExceptionHandler(UserAlreadyExistException.class)
-    public final ResponseEntity<ErrorDto> handleUserNotFoundException
+    public final ResponseEntity<ErrorDto> handleUserAlreadyExistException
             (UserAlreadyExistException ex, WebRequest request) {
         List<String> details = new ArrayList<>();
         details.add(ex.getLocalizedMessage());
@@ -70,4 +71,29 @@ public class ExceptionHandler {
         ErrorDto error = new ErrorDto("NOT_FOUND", details);
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(CommentNotFoundException.class)
+    public final ResponseEntity<ErrorDto> handleCommentNotFoundException(CommentNotFoundException ex, WebRequest request) {
+        List<String> details = new ArrayList<>();
+        details.add(ex.getLocalizedMessage());
+        ErrorDto error = new ErrorDto("NOT_FOUND", details);
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(CommentEditException.class)
+    public final ResponseEntity<ErrorDto> handleCommentEditException(CommentEditException ex, WebRequest request) {
+        List<String> details = new ArrayList<>();
+        details.add(ex.getLocalizedMessage());
+        ErrorDto error = new ErrorDto("NOT_FOUND", details);
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(UnSuccessDeleteException.class)
+    public final ResponseEntity<ErrorDto> handleUnSuccessDeleteException(UnSuccessDeleteException ex, WebRequest request) {
+        List<String> details = new ArrayList<>();
+        details.add(ex.getLocalizedMessage());
+        ErrorDto error = new ErrorDto("EXPECTATION_FAILED", details);
+        return new ResponseEntity<>(error, HttpStatus.EXPECTATION_FAILED);
+    }
+
 }

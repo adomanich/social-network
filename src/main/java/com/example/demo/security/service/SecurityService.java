@@ -3,7 +3,7 @@ package com.example.demo.security.service;
 import com.example.demo.dto.UserDto;
 import com.example.demo.entity.User;
 import com.example.demo.entity.request.Login;
-import com.example.demo.exeption.UserNotFoundException;
+import com.example.demo.exeption.notfound.UserNotFoundException;
 import com.example.demo.mapping.UserMappingDto;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.dto.SingUpDto;
