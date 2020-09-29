@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.UserDto;
+import com.example.demo.entity.Message;
 import com.example.demo.entity.Publication;
 import com.example.demo.entity.User;
 import com.example.demo.exeption.notfound.UserNotFoundException;
@@ -13,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.websocket.server.PathParam;
 import java.util.List;
 
 @RestController
@@ -26,7 +26,7 @@ public class UserController {
     private PublicationService publicationService;
 
     @GetMapping("api/users")
-    public ResponseEntity<List<User>> getAllUsers(@PathParam("fullName") String fullName) {
+    public ResponseEntity<List<User>> getAllUsers(@RequestParam(required = false) String fullName) {
         if (fullName == null) {
             return ResponseEntity.status(HttpStatus.OK).body(userService.findAllUsers());
         } else {
@@ -35,8 +35,8 @@ public class UserController {
     }
 
     @PutMapping("/api/user/{userId}")
-    public ResponseEntity<UserDto> startFollow(@RequestParam("followerId") Long followerId,
-                                               @PathVariable("userId") Long userId) {
+    public ResponseEntity<?> startFollow(@RequestParam("followerId") Long followerId,
+                                         @PathVariable("userId") Long userId) {
 
         User userToUpdate = userService.getUserById(userId);
         if (userToUpdate == null) {
@@ -48,6 +48,10 @@ public class UserController {
             throw new UserNotFoundException("User with " + followerId + " does not exist");
         }
 
+        if (followerId.equals(userId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Message("User id and follower id is the same"));
+        }
+
         User updatedUser = userService.startFollowing(userToUpdate, userBeFollowed);
         List<Publication> usersPublications = publicationService.getUsersPublications(updatedUser.getId());
 
@@ -55,8 +59,8 @@ public class UserController {
     }
 
     @DeleteMapping("api/user/{userId}/followers/{followerId}")
-    public ResponseEntity<UserDto> removeFollower(@PathVariable("userId") Long userId,
-                                                  @PathVariable("followerId") Long followerId) {
+    public ResponseEntity<?> deleteFollower(@PathVariable("userId") Long userId,
+                                            @PathVariable("followerId") Long followerId) {
         User user = userService.getUserById(userId);
         if (user == null) {
             throw new UserNotFoundException("User with " + userId + " does not exist");
@@ -67,6 +71,10 @@ public class UserController {
             throw new UserNotFoundException("User with " + userId + " does not exist");
         }
 
+        if (followerId.equals(userId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Message("User id and follower id is the same"));
+        }
+
         User updatedUser = userService.removeFollower(user, follower);
         List<Publication> usersPublications = publicationService.getUsersPublications(updatedUser.getId());
 
@@ -74,8 +82,8 @@ public class UserController {
     }
 
     @DeleteMapping("api/user/{userId}/following/{followingId}")
-    public ResponseEntity<UserDto> removeFollowing(@PathVariable("userId") Long userId,
-                                                   @PathVariable("followingId") Long followingId) {
+    public ResponseEntity<?> deleteFollowing(@PathVariable("userId") Long userId,
+                                             @PathVariable("followingId") Long followingId) {
         User user = userService.getUserById(userId);
         if (user == null) {
             throw new UserNotFoundException("User with " + userId + " does not exist");
@@ -84,6 +92,10 @@ public class UserController {
         User follower = userService.getUserById(followingId);
         if (follower == null) {
             throw new UserNotFoundException("User with " + userId + " does not exist");
+        }
+
+        if (followingId.equals(userId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Message("User id and following id is the same"));
         }
 
         User updatedUser = userService.removeFollowing(user, follower);
