@@ -3,8 +3,9 @@ package com.example.demo.service;
 import com.example.demo.entity.User;
 import com.example.demo.exeption.UnSuccessDeleteException;
 import com.example.demo.exeption.notfound.FollowerNotFoundException;
-import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.UserRepositoryImp;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,11 +16,15 @@ import java.util.stream.Collectors;
 public class UserService {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserRepositoryImp userRepositoryImp;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
-    public User saveUser(User model) {
+    private final String KEY = "USER";
+
+    public boolean saveUser(User model) {
         model.setId(System.currentTimeMillis());
-        return userRepository.save(model);
+        return userRepositoryImp.saveUser(model);
     }
 
     public User startFollowing(User userStartFollowing, User userBeFollowed) {
@@ -31,24 +36,24 @@ public class UserService {
         currentFollowersOfUserBeFollowed.add(userStartFollowing.getId());
         userBeFollowed.setFollowers(currentFollowersOfUserBeFollowed);
 
-        userRepository.save(userStartFollowing);
-        userRepository.save(userBeFollowed);
+        userRepositoryImp.saveUser(userStartFollowing);
+        userRepositoryImp.saveUser(userBeFollowed);
 
         return userStartFollowing;
     }
 
-    public User removeFollower(User user, User follower) {
+    public boolean removeFollower(User user, User follower) {
         removeFollower(user, follower.getId());
         removeFollowing(follower, user.getId());
-        userRepository.save(follower);
-        return userRepository.save(user);
+        userRepositoryImp.saveUser(follower);
+        return userRepositoryImp.saveUser(user);
     }
 
-    public User removeFollowing(User user, User following) {
+    public boolean removeFollowing(User user, User following) {
         removeFollowing(user, following.getId());
         removeFollower(following, user.getId());
-        userRepository.save(following);
-        return userRepository.save(user);
+        userRepositoryImp.saveUser(following);
+        return userRepositoryImp.saveUser(user);
     }
 
     private void removeFollower(User user, Long id) {
@@ -67,12 +72,8 @@ public class UserService {
                 .orElseThrow(() -> new FollowerNotFoundException(id + " user is not a following for " + user.getId() + " user")));
     }
 
-    public User getUserByEmail(String email) {
-        return userRepository.getUserIdByEmail(email);
-    }
-
     public User getUserById(Long id) {
-        return userRepository.getUserById(id);
+        return userRepositoryImp.getUserById(id);
     }
 
     public List<User> filterUserByFullName(String fullName) {
@@ -87,12 +88,12 @@ public class UserService {
     }
 
     public List<User> findAllUsers() {
-        return userRepository.findAll();
+        return userRepositoryImp.getAllUsers();
     }
 
     public List<User> deleteUser(User user) {
-        userRepository.delete(user);
-        if (userRepository.getUserById(user.getId()) != null) {
+        userRepositoryImp.deleteUser(user.getId());
+        if (userRepositoryImp.getUserById(user.getId()) != null) {
             throw new UnSuccessDeleteException("User with - " + user.getId() + " id was not deleted");
         }
         return findAllUsers();
