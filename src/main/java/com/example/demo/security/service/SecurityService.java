@@ -55,7 +55,7 @@ public class SecurityService implements UserDetailsService {
     }
 
     public boolean isPasswordValid(Login loginModel) {
-        String userEncodedPassword = userRepository.getUserPasswordByEmail(loginModel.getEmail()).getPassword();
+        String userEncodedPassword = userRepository.getUserIdByEmail(loginModel.getEmail()).getPassword();
         return bCryptPasswordEncoder.matches(loginModel.getPassword(), userEncodedPassword);
     }
 }

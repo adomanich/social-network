@@ -3,18 +3,18 @@ package com.example.demo.entity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.util.List;
 
 @Getter
 @Setter
 @ToString
-@Document(collection = "Users")
+@Table("Users")
 public class User {
 
-    @Id
+    @PrimaryKey
     private long id;
     private String email;
     private String password;
