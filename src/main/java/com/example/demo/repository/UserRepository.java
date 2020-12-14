@@ -1,22 +1,18 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.User;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import org.springframework.stereotype.Repository;
 
-@Repository
-public interface UserRepository extends MongoRepository<User, Integer> {
+import java.util.List;
 
-    @Query(value = "{email: ?0}")
-    User findUserByEmail(String email);
+public interface UserRepository {
 
-    @Query(value = "{email: ?0}", fields = "{password: 1}")
-    User getUserPasswordByEmail(String email);
+    boolean saveUser(User model);
 
-    @Query(value = "{email: ?0}")
-    User getUserIdByEmail(String email);
+    List<User> getAllUsers();
 
-    @Query(value = "{id: ?0}")
     User getUserById(Long id);
+
+    boolean deleteUser(Long id);
+
+    boolean updateUser(Long id, User user);
 }
